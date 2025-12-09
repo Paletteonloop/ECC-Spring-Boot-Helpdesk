@@ -2,27 +2,40 @@ package com.carlolobitana.helpdesk.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
 public class Ticket {
     @Id
-    private Long id;
-    private String ticketNumber;
+    private Long ticketNumber;
     private String title;
     private String body;
     private String assignee;
     private String status;
-    private Date dateCreated;
     private String createdBy;
-    private Date dateUpdated;
     private String updatedBy;
     private String remarks;
 
-    public Ticket(Long id, String ticketNumber, String title, String body, String assignee, String status,
-                  Date dateCreated, String createdBy, Date dateUpdated, String updatedBy, String remarks) {
-        this.id = id;
+    private LocalDateTime dateCreated;
+    private LocalDateTime dateUpdated;
+
+    @PrePersist
+    protected void onCreate() {
+        dateCreated = LocalDateTime.now();
+        dateUpdated = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        dateUpdated = LocalDateTime.now();
+    }
+
+    public Ticket(Long ticketNumber, String title, String body, String assignee, String status,
+                  LocalDateTime dateCreated, String createdBy, LocalDateTime dateUpdated, String updatedBy, String remarks) {
         this.ticketNumber = ticketNumber;
         this.title = title;
         this.body = body;
@@ -37,19 +50,11 @@ public class Ticket {
 
     // Getters and Setters
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTicketNumber() {
+    public Long getTicketNumber() {
         return ticketNumber;
     }
 
-    public void setTicketNumber(String ticketNumber) {
+    public void setTicketNumber(Long ticketNumber) {
         this.ticketNumber = ticketNumber;
     }
 
@@ -85,11 +90,11 @@ public class Ticket {
         this.status = status;
     }
 
-    public Date getDateCreated() {
+    public LocalDateTime getDateCreated() {
         return dateCreated;
     }
 
-    public void setDateCreated(Date dateCreated) {
+    public void setDateCreated(LocalDateTime dateCreated) {
         this.dateCreated = dateCreated;
     }
 
@@ -101,11 +106,11 @@ public class Ticket {
         this.createdBy = createdBy;
     }
 
-    public Date getDateUpdated() {
+    public LocalDateTime getDateUpdated() {
         return dateUpdated;
     }
 
-    public void setDateUpdated(Date dateUpdated) {
+    public void setDateUpdated(LocalDateTime dateUpdated) {
         this.dateUpdated = dateUpdated;
     }
 
@@ -128,7 +133,6 @@ public class Ticket {
     @Override
     public String toString() {
         return "Ticket{" +
-                "id=" + id +
                 ", ticketNumber='" + ticketNumber + '\'' +
                 ", title='" + title + '\'' +
                 ", body='" + body + '\'' +
