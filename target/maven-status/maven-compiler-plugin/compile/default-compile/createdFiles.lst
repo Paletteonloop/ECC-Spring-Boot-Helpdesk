@@ -1,0 +1,16 @@
+com\carlolobitana\helpdesk\controller\TicketController.class
+com\carlolobitana\helpdesk\repository\TicketRepository.class
+com\carlolobitana\helpdesk\service\RoleService.class
+com\carlolobitana\helpdesk\service\impl\TicketServiceImpl.class
+com\carlolobitana\helpdesk\service\impl\RoleServiceImpl.class
+com\carlolobitana\helpdesk\service\TicketService.class
+com\carlolobitana\helpdesk\service\EmployeeService.class
+com\carlolobitana\helpdesk\model\Role.class
+com\carlolobitana\helpdesk\HelpdeskApplication.class
+com\carlolobitana\helpdesk\controller\RoleController.class
+com\carlolobitana\helpdesk\model\Employee.class
+com\carlolobitana\helpdesk\controller\EmployeeController.class
+com\carlolobitana\helpdesk\repository\EmployeeRepository.class
+com\carlolobitana\helpdesk\model\Ticket.class
+com\carlolobitana\helpdesk\service\impl\EmployeeServiceImpl.class
+com\carlolobitana\helpdesk\repository\RoleRepository.class
