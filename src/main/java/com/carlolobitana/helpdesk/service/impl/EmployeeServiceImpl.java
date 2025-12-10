@@ -1,6 +1,7 @@
 package com.carlolobitana.helpdesk.service.impl;
 
 import com.carlolobitana.helpdesk.model.Employee;
+import com.carlolobitana.helpdesk.model.Role;
 import com.carlolobitana.helpdesk.repository.EmployeeRepository;
 import com.carlolobitana.helpdesk.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(id);
     }
 
-    public void assignRoleToEmployee(Long employeeId, Long roleId) {
-
-    }
+//    public void assignRoleToEmployee(Long employeeId, Role role) {
+//        Employee employee = employeeRepository.findById(employeeId).orElse(null);
+//        if (employee != null) {
+//            employee.setRole(role);
+//            employeeRepository.save(employee);
+//        }
+//    }
 }
