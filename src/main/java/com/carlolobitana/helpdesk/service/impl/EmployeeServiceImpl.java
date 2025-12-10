@@ -15,7 +15,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Override
     public List<Employee> viewAllEmployees() {
         return employeeRepository.findAll();
     }
@@ -28,7 +27,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.save(employee);
     }
 
-    @Override
     public Employee updateEmployee(Long id, Map<String, Object> updates) {
         Employee employee = employeeRepository.findById(id).orElse(null);
 
@@ -52,12 +50,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     }
 
-    @Override
     public void deleteEmployee(Long id) {
         employeeRepository.deleteById(id);
     }
 
-    @Override
     public void assignRoleToEmployee(Long employeeId, Long roleId) {
 
     }

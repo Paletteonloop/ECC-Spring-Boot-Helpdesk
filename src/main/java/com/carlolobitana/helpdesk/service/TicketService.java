@@ -12,4 +12,7 @@ public interface TicketService {
     Ticket createTicket(Ticket ticket);
     Ticket updateTicket(Long id, Map<String , Object> updates);
     void deleteTicket(Long id);
+    Ticket assignTicket(Long id, String assignee);
+    Ticket changeTicketStatus(Long id, String status);
+    Ticket addTicketRemarks(Long id, String remarks);
 }

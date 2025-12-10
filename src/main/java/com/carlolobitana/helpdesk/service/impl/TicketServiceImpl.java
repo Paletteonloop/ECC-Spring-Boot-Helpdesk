@@ -13,22 +13,18 @@ public class TicketServiceImpl implements TicketService {
 
     private TicketRepository ticketRepository;
 
-    @Override
     public List<Ticket> viewAllTickets() {
         return ticketRepository.findAll();
     }
 
-    @Override
     public Ticket viewTicketById(Long id) {
         return ticketRepository.findById(id).orElse(null);
     }
 
-    @Override
     public Ticket createTicket(Ticket ticket) {
         return ticketRepository.save(ticket);
     }
 
-    @Override
     public Ticket updateTicket(Long id, Map<String, Object> updates) {
         Ticket ticket = ticketRepository.findById(id).orElse(null);
 
@@ -65,8 +61,25 @@ public class TicketServiceImpl implements TicketService {
 
     }
 
-    @Override
     public void deleteTicket(Long id) {
         ticketRepository.deleteById(id);
+    }
+
+    public Ticket assignTicket(Long id, String assignee) {
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
+        ticket.setAssignee(assignee);
+        return ticketRepository.save(ticket);
+    }
+
+    public Ticket changeTicketStatus(Long id, String status) {
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
+        ticket.setStatus(status);
+        return ticketRepository.save(ticket);
+    }
+
+    public Ticket addTicketRemarks(Long id, String remarks) {
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
+        ticket.setRemarks(remarks);
+        return ticketRepository.save(ticket);
     }
 }

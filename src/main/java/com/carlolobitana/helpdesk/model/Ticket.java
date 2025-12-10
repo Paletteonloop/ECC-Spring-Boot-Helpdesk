@@ -6,7 +6,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 public class Ticket {
