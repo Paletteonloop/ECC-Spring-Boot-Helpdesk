@@ -3,6 +3,7 @@ package com.carlolobitana.helpdesk.service.impl;
 import com.carlolobitana.helpdesk.model.Ticket;
 import com.carlolobitana.helpdesk.repository.TicketRepository;
 import com.carlolobitana.helpdesk.service.TicketService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 @Service
 public class TicketServiceImpl implements TicketService {
 
+    @Autowired
     private TicketRepository ticketRepository;
 
     public List<Ticket> viewAllTickets() {

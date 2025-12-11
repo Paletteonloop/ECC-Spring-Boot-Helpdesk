@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/helpdesk/tickets")
 public class TicketController {
     @Autowired
     private TicketService ticketService;
@@ -19,16 +20,16 @@ public class TicketController {
     }
 
     @GetMapping("/{id}")
-    public Ticket viewTicketById(Long id) {
+    public Ticket viewTicketById(@PathVariable Long id) {
         return ticketService.viewTicketById(id);
     }
 
     @PostMapping
-    public Ticket createTicket(Ticket ticket) {
+    public Ticket createTicket(@RequestBody Ticket ticket) {
         return ticketService.createTicket(ticket);
     }
 
-    @PostMapping("/{id}")
+    @PatchMapping("/{id}")
     public Ticket updateTicket(@PathVariable Long id, @RequestBody Map<String , Object> updates) {
         return ticketService.updateTicket(id, updates);
     }
