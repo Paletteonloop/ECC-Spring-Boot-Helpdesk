@@ -1,18 +1,16 @@
 package com.carlolobitana.helpdesk.service;
 
-import com.carlolobitana.helpdesk.model.Ticket;
-
-import java.util.List;
-import java.util.Map;
+import com.carlolobitana.helpdesk.dto.TicketRequestDTO;
+import com.carlolobitana.helpdesk.dto.TicketResponseDTO;
+import com.carlolobitana.helpdesk.enums.TicketStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface TicketService {
 
-    List<Ticket> viewAllTickets();
-    Ticket viewTicketById(Long id);
-    Ticket createTicket(Ticket ticket);
-    Ticket updateTicket(Long id, Map<String , Object> updates);
-    void deleteTicket(Long id);
-    Ticket assignTicket(Long id, String assignee);
-    Ticket changeTicketStatus(Long id, String status);
-    Ticket addTicketRemarks(Long id, String remarks);
+    TicketResponseDTO fileTicket(TicketRequestDTO dto);
+    Page<TicketResponseDTO> getTickets(TicketStatus status, Long assigneeId, Pageable pageable);
+    TicketResponseDTO getTicketById(String ticketNumber);
+    TicketResponseDTO assignTicket(String ticketNumber, Long employeeId, Long updaterId);
+    TicketResponseDTO updateTicket(String ticketNumber, TicketStatus status, String remarks, Long updaterId);
 }

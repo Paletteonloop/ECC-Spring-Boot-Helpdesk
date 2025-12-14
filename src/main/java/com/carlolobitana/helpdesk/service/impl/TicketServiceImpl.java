@@ -1,87 +1,82 @@
 package com.carlolobitana.helpdesk.service.impl;
 
+import com.carlolobitana.helpdesk.dto.TicketRequestDTO;
+import com.carlolobitana.helpdesk.dto.TicketResponseDTO;
+import com.carlolobitana.helpdesk.model.Employee;
 import com.carlolobitana.helpdesk.model.Ticket;
+import com.carlolobitana.helpdesk.enums.TicketStatus;
+import com.carlolobitana.helpdesk.repository.EmployeeRepository;
 import com.carlolobitana.helpdesk.repository.TicketRepository;
+import com.carlolobitana.helpdesk.repository.TicketSpecification;
 import com.carlolobitana.helpdesk.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class TicketServiceImpl implements TicketService {
-
     @Autowired
     private TicketRepository ticketRepository;
 
-    public List<Ticket> viewAllTickets() {
-        return ticketRepository.findAll();
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    public TicketResponseDTO fileTicket(TicketRequestDTO dto) {
+        Employee creator = employeeRepository.findById(dto.getCreatorId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        Ticket ticket = new Ticket();
+        ticket.setTitle(dto.getTitle());
+        ticket.setBody(dto.getBody());
+        ticket.setCreatedBy(creator);
+        ticket.setStatus(TicketStatus.FILED);
+        ticket.setTicketNumber(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public Ticket viewTicketById(Long id) {
-        return ticketRepository.findById(id).orElse(null);
+    public Page<TicketResponseDTO> getTickets(TicketStatus status, Long assigneeId, Pageable pageable) {
+        Page<Ticket> tickets = ticketRepository.findAll(TicketSpecification.filterTickets(status, assigneeId), pageable);
+        return tickets.map(this::mapToResponse);
     }
 
-    public Ticket createTicket(Ticket ticket) {
-        return ticketRepository.save(ticket);
+    public TicketResponseDTO getTicketById(String ticketNumber) {
+        Ticket ticket = ticketRepository.findById(ticketNumber)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketNumber));
+        return mapToResponse(ticket);
     }
 
-    public Ticket updateTicket(Long id, Map<String, Object> updates) {
-        Ticket ticket = ticketRepository.findById(id).orElse(null);
-
-        updates.forEach((key, value) -> {
-            switch (key) {
-                case "ticketNumber":
-                    ticket.setTicketNumber((Long) value);
-                    break;
-                case "title":
-                    ticket.setTitle((String) value);
-                    break;
-                case "body":
-                    ticket.setBody((String) value);
-                    break;
-                case "assignee":
-                    ticket.setAssignee((String) value);
-                    break;
-                case "status":
-                    ticket.setStatus((String) value);
-                    break;
-                case "createdBy":
-                    ticket.setCreatedBy((String) value);
-                    break;
-                case "updatedBy":
-                    ticket.setUpdatedBy((String) value);
-                    break;
-                case "remarks":
-                    ticket.setRemarks((String) value);
-                    break;
-            }
-        });
-
-        return ticketRepository.save(ticket);
-
-    }
-
-    public void deleteTicket(Long id) {
-        ticketRepository.deleteById(id);
-    }
-
-    public Ticket assignTicket(Long id, String assignee) {
-        Ticket ticket = ticketRepository.findById(id).orElse(null);
+    public TicketResponseDTO assignTicket(String ticketNumber, Long employeeId, Long updaterId) {
+        Ticket ticket = ticketRepository.findById(ticketNumber).orElseThrow();
+        Employee assignee = employeeRepository.findById(employeeId).orElseThrow();
+        Employee updater = employeeRepository.findById(updaterId).orElseThrow();
         ticket.setAssignee(assignee);
-        return ticketRepository.save(ticket);
+        ticket.setStatus(TicketStatus.IN_PROGRESS);
+        ticket.setUpdatedBy(updater.getName());
+        return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public Ticket changeTicketStatus(Long id, String status) {
-        Ticket ticket = ticketRepository.findById(id).orElse(null);
-        ticket.setStatus(status);
-        return ticketRepository.save(ticket);
+    public TicketResponseDTO updateTicket(String ticketNumber, TicketStatus status, String remarks, Long updaterId) {
+        Ticket ticket = ticketRepository.findById(ticketNumber).orElseThrow();
+        Employee updater = employeeRepository.findById(updaterId).orElseThrow();
+        if(status != null) ticket.setStatus(status);
+        if(remarks != null) ticket.setRemarks(remarks);
+        ticket.setUpdatedBy(updater.getName());
+        return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public Ticket addTicketRemarks(Long id, String remarks) {
-        Ticket ticket = ticketRepository.findById(id).orElse(null);
-        ticket.setRemarks(remarks);
-        return ticketRepository.save(ticket);
+    private TicketResponseDTO mapToResponse(Ticket ticket) {
+        TicketResponseDTO dto = new TicketResponseDTO();
+        dto.setTicketNumber(ticket.getTicketNumber());
+        dto.setTitle(ticket.getTitle());
+        dto.setBody(ticket.getBody());
+        dto.setStatus(ticket.getStatus());
+        dto.setCreatedDate(ticket.getCreatedDate());
+        dto.setUpdatedDate(ticket.getUpdatedDate());
+        dto.setUpdatedBy(ticket.getUpdatedBy());
+        dto.setRemarks(ticket.getRemarks());
+        if (ticket.getAssignee() != null) dto.setAssigneeName(ticket.getAssignee().getName());
+        if (ticket.getCreatedBy() != null) dto.setCreatedByName(ticket.getCreatedBy().getName());
+        return dto;
     }
 }

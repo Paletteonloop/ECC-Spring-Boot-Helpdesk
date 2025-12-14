@@ -1,18 +1,15 @@
 package com.carlolobitana.helpdesk.service;
 
-import com.carlolobitana.helpdesk.model.Employee;
-import com.carlolobitana.helpdesk.model.Role;
-
+import com.carlolobitana.helpdesk.dto.EmployeeRequestDTO;
+import com.carlolobitana.helpdesk.dto.EmployeeResponseDTO;
 import java.util.List;
-import java.util.Map;
+
 
 public interface EmployeeService {
 
-    List<Employee> viewAllEmployees();
-    Employee viewEmployeeById(Long id);
-    Employee createEmployee(Employee employee);
-    Employee updateEmployee(Long id, Map<String, Object> updates);
+    EmployeeResponseDTO createEmployee(EmployeeRequestDTO dto);
+    List<EmployeeResponseDTO> getAllEmployees();
+    EmployeeResponseDTO getEmployeeById(Long id);
+    EmployeeResponseDTO updateEmployee(Long id, EmployeeRequestDTO dto);
     void deleteEmployee(Long id);
-//void assignRoleToEmployee(Long employeeId, Role role);
-
 }

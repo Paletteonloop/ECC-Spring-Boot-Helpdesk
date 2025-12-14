@@ -1,15 +1,13 @@
 package com.carlolobitana.helpdesk.service;
 
-import com.carlolobitana.helpdesk.model.Role;
+import com.carlolobitana.helpdesk.dto.RoleDTO;
 import java.util.List;
-
 
 public interface RoleService {
 
-    List<Role> viewAllRoles();
-    Role viewRoleById(Long id);
-    Role createRole(String name);
-    void updateRole(Long id, String name);
+    RoleDTO createRole(RoleDTO dto);
+    List<RoleDTO> getAllRoles();
+    RoleDTO getRoleById(Long id);
+    RoleDTO updateRole(Long id, RoleDTO dto);
     void deleteRole(Long id);
-
 }
