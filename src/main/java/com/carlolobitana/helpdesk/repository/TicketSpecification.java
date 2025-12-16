@@ -18,7 +18,7 @@ public class TicketSpecification {
             if (assigneeId != null) {
                 predicates.add(criteriaBuilder.equal(root.get("assignee").get("id"), assigneeId));
             }
-            //Order by Created Date Descending
+            //order by Created Date Descending
             //query.orderBy(criteriaBuilder.desc(root.get("createdDate")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
