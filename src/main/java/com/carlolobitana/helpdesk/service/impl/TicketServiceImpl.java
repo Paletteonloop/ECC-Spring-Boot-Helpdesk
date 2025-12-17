@@ -2,7 +2,9 @@ package com.carlolobitana.helpdesk.service.impl;
 
 import com.carlolobitana.helpdesk.dto.TicketRequestDTO;
 import com.carlolobitana.helpdesk.dto.TicketResponseDTO;
+import com.carlolobitana.helpdesk.exception.ResourceNotFoundException;
 import com.carlolobitana.helpdesk.model.Employee;
+import com.carlolobitana.helpdesk.model.FullName;
 import com.carlolobitana.helpdesk.model.Ticket;
 import com.carlolobitana.helpdesk.enums.TicketStatus;
 import com.carlolobitana.helpdesk.repository.EmployeeRepository;
@@ -25,7 +27,7 @@ public class TicketServiceImpl implements TicketService {
 
     public TicketResponseDTO fileTicket(TicketRequestDTO dto) {
         Employee creator = employeeRepository.findById(dto.getCreatorId())
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
         Ticket ticket = new Ticket();
         ticket.setTitle(dto.getTitle());
         ticket.setBody(dto.getBody());
@@ -42,17 +44,17 @@ public class TicketServiceImpl implements TicketService {
 
     public TicketResponseDTO getTicketById(String ticketNumber) {
         Ticket ticket = ticketRepository.findById(ticketNumber)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketNumber));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with ID: " + ticketNumber));
         return mapToResponse(ticket);
     }
 
     public TicketResponseDTO assignTicket(String ticketNumber, Long employeeId, Long updaterId) {
-        Ticket ticket = ticketRepository.findById(ticketNumber).orElseThrow();
-        Employee assignee = employeeRepository.findById(employeeId).orElseThrow();
-        Employee updater = employeeRepository.findById(updaterId).orElseThrow();
+        Ticket ticket = ticketRepository.findById(ticketNumber).orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+        Employee assignee = employeeRepository.findById(employeeId).orElseThrow(() -> new ResourceNotFoundException("Assignee not found"));
+        Employee updater = employeeRepository.findById(updaterId).orElseThrow(() -> new ResourceNotFoundException("Updater not found"));
         ticket.setAssignee(assignee);
         ticket.setStatus(TicketStatus.IN_PROGRESS);
-        ticket.setUpdatedBy(updater.getName());
+        ticket.setUpdatedBy(formatFullName(updater.getName()));
         return mapToResponse(ticketRepository.save(ticket));
     }
 
@@ -61,7 +63,7 @@ public class TicketServiceImpl implements TicketService {
         Employee updater = employeeRepository.findById(updaterId).orElseThrow();
         if(status != null) ticket.setStatus(status);
         if(remarks != null) ticket.setRemarks(remarks);
-        ticket.setUpdatedBy(updater.getName());
+        ticket.setUpdatedBy(formatFullName(updater.getName()));
         return mapToResponse(ticketRepository.save(ticket));
     }
 
@@ -75,8 +77,17 @@ public class TicketServiceImpl implements TicketService {
         dto.setUpdatedDate(ticket.getUpdatedDate());
         dto.setUpdatedBy(ticket.getUpdatedBy());
         dto.setRemarks(ticket.getRemarks());
-        if (ticket.getAssignee() != null) dto.setAssigneeName(ticket.getAssignee().getName());
-        if (ticket.getCreatedBy() != null) dto.setCreatedByName(ticket.getCreatedBy().getName());
+        if (ticket.getAssignee() != null) {
+            dto.setAssigneeName(formatFullName(ticket.getAssignee().getName()));
+        }
+        if (ticket.getCreatedBy() != null) {
+            dto.setCreatedByName(formatFullName(ticket.getCreatedBy().getName()));
+        }
         return dto;
+    }
+
+    private String formatFullName(FullName name) {
+        if (name == null) return "Unknown";
+        return String.format("%s %s", name.getFirstName(), name.getLastName()).trim();
     }
 }

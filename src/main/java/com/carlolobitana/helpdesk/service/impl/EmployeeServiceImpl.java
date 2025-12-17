@@ -1,5 +1,8 @@
 package com.carlolobitana.helpdesk.service.impl;
 
+import com.carlolobitana.helpdesk.exception.ResourceNotFoundException;
+import com.carlolobitana.helpdesk.model.ContactInfo;
+import com.carlolobitana.helpdesk.model.FullName;
 import com.carlolobitana.helpdesk.service.EmployeeService;
 import com.carlolobitana.helpdesk.dto.EmployeeRequestDTO;
 import com.carlolobitana.helpdesk.dto.EmployeeResponseDTO;
@@ -32,28 +35,37 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     public EmployeeResponseDTO getEmployeeById(Long id) {
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
+        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
         return mapToResponse(employee);
     }
 
     public EmployeeResponseDTO updateEmployee(Long id, EmployeeRequestDTO dto) {
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
+        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
         mapDtoToEntity(dto, employee);
         return mapToResponse(employeeRepository.save(employee));
     }
 
     public void deleteEmployee(Long id) {
-        if (!employeeRepository.existsById(id)) {
-            throw new RuntimeException("Employee not found");
-        }
-        employeeRepository.deleteById(id);
+        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
+        employee.setDeleted(true);
+        employeeRepository.save(employee);
     }
 
     private void mapDtoToEntity(EmployeeRequestDTO dto, Employee employee) {
-        employee.setName(dto.getName());
+        FullName fullName = new FullName(
+                dto.getFirstName(),
+                dto.getMiddleName(),
+                dto.getLastName()
+        );
+        employee.setName(fullName);
+
         employee.setAge(dto.getAge());
-        employee.setAddress(dto.getAddress());
-        employee.setContactNumber(dto.getContactNumber());
+
+        ContactInfo info = new ContactInfo();
+        info.setAddress(dto.getAddress());
+        info.setContactNumber(dto.getContactNumber());
+        employee.setContactInfo(info);
+
         employee.setEmploymentStatus(dto.getEmploymentStatus());
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
             List<Role> roles = roleRepository.findAllById(dto.getRoleIds());
@@ -64,10 +76,22 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeResponseDTO mapToResponse(Employee employee) {
         EmployeeResponseDTO response = new EmployeeResponseDTO();
         response.setId(employee.getId());
-        response.setName(employee.getName());
+
+        if (employee.getName() != null) {
+            String full = String.format("%s %s %s",
+                    employee.getName().getFirstName(),
+                    employee.getName().getMiddleName() != null ? employee.getName().getMiddleName() : "",
+                    employee.getName().getLastName()).replace("  ", " ");
+            response.setName(full.trim());
+        }
+
         response.setAge(employee.getAge());
-        response.setAddress(employee.getAddress());
-        response.setContactNumber(employee.getContactNumber());
+
+        if (employee.getContactInfo() != null) {
+            response.setAddress(employee.getContactInfo().getAddress());
+            response.setContactNumber(employee.getContactInfo().getContactNumber());
+        }
+
         response.setEmploymentStatus(employee.getEmploymentStatus());
         if (employee.getRoles() != null) {
             response.setRoles(employee.getRoles().stream()
