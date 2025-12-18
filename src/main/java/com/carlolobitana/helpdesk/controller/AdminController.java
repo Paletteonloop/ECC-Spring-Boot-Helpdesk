@@ -2,7 +2,11 @@ package com.carlolobitana.helpdesk.controller;
 
 import com.carlolobitana.helpdesk.enums.EmploymentStatus;
 import com.carlolobitana.helpdesk.enums.TicketStatus;
-import com.carlolobitana.helpdesk.model.*;
+import com.carlolobitana.helpdesk.model.ContactInfo;
+import com.carlolobitana.helpdesk.model.Employee;
+import com.carlolobitana.helpdesk.model.FullName;
+import com.carlolobitana.helpdesk.model.Role;
+import com.carlolobitana.helpdesk.model.Ticket;
 import com.carlolobitana.helpdesk.repository.EmployeeRepository;
 import com.carlolobitana.helpdesk.repository.RoleRepository;
 import com.carlolobitana.helpdesk.repository.TicketRepository;
@@ -12,7 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
 
 @RestController
 @RequestMapping("/api/admin")
@@ -36,7 +44,6 @@ public class AdminController {
         Role auditor = createRole("AUDITOR");
 
         // 2. Create Employees with Mixed Roles
-        // We'll store them in a list to pick random creators/assignees later
         List<Employee> allEmployees = new ArrayList<>();
 
         allEmployees.add(createEmployee("John", "Doe", Set.of(admin, manager))); // Multi-role

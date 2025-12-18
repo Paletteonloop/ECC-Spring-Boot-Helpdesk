@@ -2,6 +2,7 @@ package com.carlolobitana.helpdesk.service.impl;
 
 import com.carlolobitana.helpdesk.dto.TicketRequestDTO;
 import com.carlolobitana.helpdesk.dto.TicketResponseDTO;
+import com.carlolobitana.helpdesk.dto.TicketSearchDTO;
 import com.carlolobitana.helpdesk.exception.ResourceNotFoundException;
 import com.carlolobitana.helpdesk.model.Employee;
 import com.carlolobitana.helpdesk.model.FullName;
@@ -14,6 +15,7 @@ import com.carlolobitana.helpdesk.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import java.util.UUID;
 
@@ -37,9 +39,10 @@ public class TicketServiceImpl implements TicketService {
         return mapToResponse(ticketRepository.save(ticket));
     }
 
-    public Page<TicketResponseDTO> getTickets(TicketStatus status, Long assigneeId, Pageable pageable) {
-        Page<Ticket> tickets = ticketRepository.findAll(TicketSpecification.filterTickets(status, assigneeId), pageable);
-        return tickets.map(this::mapToResponse);
+    public Page<TicketResponseDTO> getTickets(TicketSearchDTO search, Pageable pageable) {
+        Specification<Ticket> spec = TicketSpecification.buildFilter(search);
+        return ticketRepository.findAll(spec, pageable)
+                .map(this::mapToResponse);
     }
 
     public TicketResponseDTO getTicketById(String ticketNumber) {

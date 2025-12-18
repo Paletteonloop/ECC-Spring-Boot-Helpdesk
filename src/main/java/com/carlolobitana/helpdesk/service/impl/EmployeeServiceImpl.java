@@ -1,8 +1,11 @@
 package com.carlolobitana.helpdesk.service.impl;
 
+import com.carlolobitana.helpdesk.dto.EmployeeStatsDTO;
+import com.carlolobitana.helpdesk.enums.TicketStatus;
 import com.carlolobitana.helpdesk.exception.ResourceNotFoundException;
 import com.carlolobitana.helpdesk.model.ContactInfo;
 import com.carlolobitana.helpdesk.model.FullName;
+import com.carlolobitana.helpdesk.repository.TicketRepository;
 import com.carlolobitana.helpdesk.service.EmployeeService;
 import com.carlolobitana.helpdesk.dto.EmployeeRequestDTO;
 import com.carlolobitana.helpdesk.dto.EmployeeResponseDTO;
@@ -20,6 +23,9 @@ import java.util.stream.Collectors;
 public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private TicketRepository ticketRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -49,6 +55,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
         employee.setDeleted(true);
         employeeRepository.save(employee);
+    }
+
+    public EmployeeStatsDTO getEmployeePerformance(Long employeeId) {
+        Employee emp = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+
+        long filed = ticketRepository.countByAssigneeAndStatus(employeeId, TicketStatus.FILED.name());
+        long progress = ticketRepository.countByAssigneeAndStatus(employeeId, TicketStatus.IN_PROGRESS.name());
+        long closed = ticketRepository.countByAssigneeAndStatus(employeeId, TicketStatus.CLOSED.name());
+
+        String fullName = emp.getName().getFirstName() + " " + emp.getName().getLastName();
+
+        return new EmployeeStatsDTO(fullName, filed, progress, closed);
     }
 
     private void mapDtoToEntity(EmployeeRequestDTO dto, Employee employee) {
