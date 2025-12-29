@@ -1,5 +1,6 @@
 package com.carlolobitana.helpdesk.service.impl;
 
+import com.carlolobitana.helpdesk.dto.ContactInfoDTO;
 import com.carlolobitana.helpdesk.dto.EmployeeStatsDTO;
 import com.carlolobitana.helpdesk.enums.TicketStatus;
 import com.carlolobitana.helpdesk.exception.ResourceNotFoundException;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,10 +82,21 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employee.setAge(dto.getAge());
 
-        ContactInfo info = new ContactInfo();
-        info.setAddress(dto.getAddress());
-        info.setContactNumber(dto.getContactNumber());
-        employee.setContactInfo(info);
+        employee.setName(new FullName(dto.getFirstName(), dto.getMiddleName(), dto.getLastName()));
+
+        if (employee.getContactInfos() != null) {
+            employee.getContactInfos().clear();
+        }
+
+        if (dto.getContactInfos() != null) {
+            dto.getContactInfos().forEach(cDto -> {
+                ContactInfo info = new ContactInfo();
+                info.setContactType(cDto.getType());
+                info.setDetails(cDto.getValue());
+                info.setEmployee(employee);
+                employee.getContactInfos().add(info);
+            });
+        }
 
         employee.setEmploymentStatus(dto.getEmploymentStatus());
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
@@ -106,16 +119,25 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         response.setAge(employee.getAge());
 
-        if (employee.getContactInfo() != null) {
-            response.setAddress(employee.getContactInfo().getAddress());
-            response.setContactNumber(employee.getContactInfo().getContactNumber());
+        response.setEmploymentStatus(employee.getEmploymentStatus());
+
+        if (employee.getRoles() != null) {
+            Set<String> roleNames = employee.getRoles().stream()
+                    .map(Role::getName)
+                    .collect(Collectors.toSet());
+            response.setRoles(roleNames);
         }
 
-        response.setEmploymentStatus(employee.getEmploymentStatus());
-        if (employee.getRoles() != null) {
-            response.setRoles(employee.getRoles().stream()
-                    .map(Role::getName).collect(Collectors.toSet()));
+        if (employee.getContactInfos() != null) {
+            List<ContactInfoDTO> contactList = employee.getContactInfos().stream().map(c -> {
+                ContactInfoDTO cDto = new ContactInfoDTO();
+                cDto.setType(c.getContactType());
+                cDto.setValue(c.getDetails());
+                return cDto;
+            }).collect(Collectors.toList());
+            response.setContactInfos(contactList);
         }
+
         return response;
     }
 }

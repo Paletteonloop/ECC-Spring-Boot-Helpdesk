@@ -3,6 +3,7 @@ package com.carlolobitana.helpdesk.model;
 import com.carlolobitana.helpdesk.enums.EmploymentStatus;
 
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,8 +14,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -31,8 +36,8 @@ public class Employee {
 
     private Integer age;
 
-    @Embedded //fields from ContactInfo will be added to Employee table
-    private ContactInfo contactInfo;
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ContactInfo> contactInfos = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private EmploymentStatus employmentStatus;

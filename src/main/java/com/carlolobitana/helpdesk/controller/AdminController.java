@@ -96,10 +96,17 @@ public class AdminController {
         Employee emp = new Employee();
         emp.setName(new FullName(fName, "", lName));
 
-        ContactInfo info = new ContactInfo();
-        info.setAddress(fName + " St., Tech City");
-        info.setContactNumber("555-" + (1000 + new Random().nextInt(9000)));
-        emp.setContactInfo(info);
+        List<ContactInfo> contacts = new ArrayList<>();
+
+        ContactInfo email = new ContactInfo(null, "Email", fName.toLowerCase() + "@helpdesk.com", emp);
+        ContactInfo mobile = new ContactInfo(null, "Mobile", "09" + new Random().nextInt(1000000), emp);
+        ContactInfo addr = new ContactInfo(null, "Address", fName + " St., Tech City", emp);
+
+        contacts.add(email);
+        contacts.add(mobile);
+        contacts.add(addr);
+
+        emp.setContactInfos(contacts);
 
         emp.setAge(22 + new Random().nextInt(30));
         emp.setEmploymentStatus(EmploymentStatus.REGULAR);
