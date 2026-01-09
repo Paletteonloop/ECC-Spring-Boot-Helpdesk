@@ -1,10 +1,12 @@
 package com.carlolobitana.helpdesk.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 
+import com.carlolobitana.helpdesk.dto.TicketRequestDTO;
 import com.carlolobitana.helpdesk.enums.TicketStatus;
 
 import com.carlolobitana.helpdesk.dto.TicketResponseDTO;
@@ -54,5 +56,54 @@ class TicketServiceImplTest {
         assertEquals(TicketStatus.IN_PROGRESS, result.getStatus());
         assertEquals("Harvey Specter", result.getAssigneeName());
         assertEquals("Donna Paulsen", ticket.getUpdatedBy());
+    }
+
+    @Test
+    void fileTicket_SetsInitialStatusAndGeneratesNumber() {
+        // Arrange
+        Employee creator = new Employee();
+        creator.setId(5L);
+        creator.setName(new FullName("Donna", "", "Paulsen"));
+
+        TicketRequestDTO dto = new TicketRequestDTO();
+        dto.setCreatorId(5L);
+        dto.setTitle("Printer Broken");
+        dto.setBody("Paper jam on floor 2");
+
+        when(employeeRepository.findById(5L)).thenReturn(Optional.of(creator));
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        TicketResponseDTO result = ticketService.fileTicket(dto);
+
+        // Assert
+        assertEquals(TicketStatus.FILED, result.getStatus());
+        assertNotNull(result.getTicketNumber());
+        assertEquals(8, result.getTicketNumber().length()); // Verifying UUID substring logic
+        assertEquals("Donna Paulsen", result.getCreatedByName());
+    }
+
+    @Test
+    void updateTicket_UpdatesOnlyProvidedFields() {
+        // Arrange
+        Ticket existingTicket = new Ticket();
+        existingTicket.setTicketNumber("ABC-123");
+        existingTicket.setStatus(TicketStatus.IN_PROGRESS);
+        existingTicket.setRemarks("Old Remark");
+
+        Employee updater = new Employee();
+        updater.setName(new FullName("Harvey", "", "Specter"));
+
+        when(ticketRepository.findById("ABC-123")).thenReturn(Optional.of(existingTicket));
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(updater));
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act: Update only remarks, status remains the same
+        TicketResponseDTO result = ticketService.updateTicket("ABC-123", null, "New Remark", 1L);
+
+        // Assert
+        assertEquals("New Remark", result.getRemarks());
+        assertEquals(TicketStatus.IN_PROGRESS, result.getStatus());
+        assertEquals("Harvey Specter", existingTicket.getUpdatedBy());
     }
 }
