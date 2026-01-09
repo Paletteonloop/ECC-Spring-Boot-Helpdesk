@@ -27,6 +27,8 @@ public class TicketServiceImpl implements TicketService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    //private EmployeeService employeeService;
+
     public TicketResponseDTO fileTicket(TicketRequestDTO dto) {
         Employee creator = employeeRepository.findById(dto.getCreatorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));

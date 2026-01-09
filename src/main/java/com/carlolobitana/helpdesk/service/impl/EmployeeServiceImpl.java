@@ -14,22 +14,20 @@ import com.carlolobitana.helpdesk.model.Employee;
 import com.carlolobitana.helpdesk.model.Role;
 import com.carlolobitana.helpdesk.repository.EmployeeRepository;
 import com.carlolobitana.helpdesk.repository.RoleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+@AllArgsConstructor
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
-    @Autowired
+
     private EmployeeRepository employeeRepository;
 
-    @Autowired
     private TicketRepository ticketRepository;
 
-    @Autowired
     private RoleRepository roleRepository;
 
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO dto) {
@@ -39,7 +37,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     public List<EmployeeResponseDTO> getAllEmployees() {
-        return employeeRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return employeeRepository.findByDeletedFalse().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     public EmployeeResponseDTO getEmployeeById(Long id) {
