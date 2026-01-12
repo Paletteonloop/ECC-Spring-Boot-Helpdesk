@@ -33,7 +33,6 @@ class TicketServiceImplTest {
 
     @Test
     void assignTicket_UpdatesStatusAndAssignee() {
-        //Arrange
         Ticket ticket = new Ticket();
         ticket.setTicketNumber("T-123");
         ticket.setStatus(TicketStatus.FILED);
@@ -49,10 +48,8 @@ class TicketServiceImplTest {
         when(employeeRepository.findById(2L)).thenReturn(Optional.of(updater));
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        //Act
         TicketResponseDTO result = ticketService.assignTicket("T-123", 1L, 2L);
 
-        //Assert
         assertEquals(TicketStatus.IN_PROGRESS, result.getStatus());
         assertEquals("Harvey Specter", result.getAssigneeName());
         assertEquals("Donna Paulsen", ticket.getUpdatedBy());
@@ -60,7 +57,6 @@ class TicketServiceImplTest {
 
     @Test
     void fileTicket_SetsInitialStatusAndGeneratesNumber() {
-        // Arrange
         Employee creator = new Employee();
         creator.setId(5L);
         creator.setName(new FullName("Donna", "", "Paulsen"));
@@ -73,10 +69,8 @@ class TicketServiceImplTest {
         when(employeeRepository.findById(5L)).thenReturn(Optional.of(creator));
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Act
         TicketResponseDTO result = ticketService.fileTicket(dto);
 
-        // Assert
         assertEquals(TicketStatus.FILED, result.getStatus());
         assertNotNull(result.getTicketNumber());
         assertEquals(8, result.getTicketNumber().length()); // Verifying UUID substring logic
@@ -85,7 +79,6 @@ class TicketServiceImplTest {
 
     @Test
     void updateTicket_UpdatesOnlyProvidedFields() {
-        // Arrange
         Ticket existingTicket = new Ticket();
         existingTicket.setTicketNumber("ABC-123");
         existingTicket.setStatus(TicketStatus.IN_PROGRESS);
@@ -98,10 +91,8 @@ class TicketServiceImplTest {
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(updater));
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Act: Update only remarks, status remains the same
         TicketResponseDTO result = ticketService.updateTicket("ABC-123", null, "New Remark", 1L);
 
-        // Assert
         assertEquals("New Remark", result.getRemarks());
         assertEquals(TicketStatus.IN_PROGRESS, result.getStatus());
         assertEquals("Harvey Specter", existingTicket.getUpdatedBy());

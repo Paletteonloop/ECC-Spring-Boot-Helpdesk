@@ -10,7 +10,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
-        //Returns 404 status code with exception message y
+        //Returns 404 status code with exception message
         return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
