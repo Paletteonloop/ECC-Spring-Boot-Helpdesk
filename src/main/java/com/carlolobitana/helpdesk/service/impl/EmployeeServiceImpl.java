@@ -16,6 +16,8 @@ import com.carlolobitana.helpdesk.repository.EmployeeRepository;
 import com.carlolobitana.helpdesk.repository.RoleRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private RoleRepository roleRepository;
 
+    @Transactional
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO dto) {
         Employee employee = new Employee();
         mapDtoToEntity(dto, employee);
@@ -41,20 +44,27 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     public EmployeeResponseDTO getEmployeeById(Long id) {
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
+        Employee employee = employeeRepository.findByIdAndDeletedFalse(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
         return mapToResponse(employee);
     }
 
+    @Transactional
     public EmployeeResponseDTO updateEmployee(Long id, EmployeeRequestDTO dto) {
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
+        Employee employee = employeeRepository.findByIdAndDeletedFalse(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
         mapDtoToEntity(dto, employee);
         return mapToResponse(employeeRepository.save(employee));
     }
 
+    @Transactional
     public void deleteEmployee(Long id) {
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
+        Employee employee = employeeRepository.findByIdAndDeletedFalse(id).orElseThrow(() -> new ResourceNotFoundException("Employee with ID " + id + " not found"));
         employee.setDeleted(true);
         employeeRepository.save(employee);
+        ticketRepository.findByAssigneeId(id).forEach(ticket -> {
+            ticket.setAssignee(null);
+            ticketRepository.save(ticket);
+        });
+
     }
 
     public EmployeeStatsDTO getEmployeePerformance(Long employeeId) {

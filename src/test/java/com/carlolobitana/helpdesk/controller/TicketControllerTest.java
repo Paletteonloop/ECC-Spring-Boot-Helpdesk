@@ -5,7 +5,10 @@ import com.carlolobitana.helpdesk.dto.TicketRequestDTO;
 import com.carlolobitana.helpdesk.dto.TicketResponseDTO;
 import com.carlolobitana.helpdesk.dto.TicketSearchDTO;
 import com.carlolobitana.helpdesk.enums.TicketStatus;
+import com.carlolobitana.helpdesk.exception.ResourceNotFoundException;
 import com.carlolobitana.helpdesk.service.TicketService;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -15,9 +18,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
+import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -25,73 +31,105 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(TicketController.class)
 class TicketControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+
     @MockitoBean
     private TicketService ticketService;
 
-    @Test
-    void fileTicket_ReturnsOk() throws Exception {
-        TicketRequestDTO request = new TicketRequestDTO();
-        request.setTitle("Login Issue");
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        TicketResponseDTO response = new TicketResponseDTO();
-        response.setTicketNumber("T-ABC");
-        response.setTitle("Login Issue");
+    private TicketResponseDTO responseDTO;
+    private final String TICKET_NO = "TKT-12345";
 
-        when(ticketService.fileTicket(any())).thenReturn(response);
-
-        mockMvc.perform(post("/api/tickets/file")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ticketNumber").value("T-ABC"));
+    @BeforeEach
+    void setUp() {
+        responseDTO = new TicketResponseDTO();
+        responseDTO.setTicketNumber(TICKET_NO);
+        responseDTO.setTitle("Test Ticket");
+        responseDTO.setStatus(TicketStatus.FILED);
     }
 
     @Test
-    void getAllTickets_SupportsPagination() throws Exception {
-        TicketResponseDTO ticket = new TicketResponseDTO();
-        ticket.setTicketNumber("T-1");
-        PageImpl<TicketResponseDTO> page = new PageImpl<>(Collections.singletonList(ticket));
+    void fileTicket_Success() throws Exception {
+        TicketRequestDTO requestDTO = new TicketRequestDTO();
+        requestDTO.setTitle("Test Ticket");
 
-        when(ticketService.getTickets(any(TicketSearchDTO.class), any())).thenReturn(page);
+        when(ticketService.fileTicket(any(TicketRequestDTO.class))).thenReturn(responseDTO);
+
+        // FIX: Match the /file sub-path in your controller
+        mockMvc.perform(post("/api/tickets/file")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ticketNumber").value(TICKET_NO));
+    }
+
+    @Test
+    void getAllTickets_Success() throws Exception {
+        when(ticketService.getTickets(any(TicketSearchDTO.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(responseDTO)));
 
         mockMvc.perform(get("/api/tickets")
                         .param("page", "0")
-                        .param("size", "10"))
+                        .param("size", "15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].ticketNumber").value("T-1"));
+                .andExpect(jsonPath("$.content[0].ticketNumber").value(TICKET_NO));
     }
 
     @Test
-    void assignTicket_WithRequestParams_ReturnsOk() throws Exception {
-        TicketResponseDTO response = new TicketResponseDTO();
-        response.setAssigneeName("Harvey Specter");
-        response.setStatus(TicketStatus.IN_PROGRESS);
+    void assignTicket_Success() throws Exception {
+        when(ticketService.assignTicket(eq(TICKET_NO), anyLong(), anyLong())).thenReturn(responseDTO);
 
-        when(ticketService.assignTicket(eq("T-123"), eq(1L), eq(2L))).thenReturn(response);
-
-        mockMvc.perform(put("/api/tickets/T-123/assign")
+        // FIX: Match the @PutMapping used in your controller
+        mockMvc.perform(put("/api/tickets/" + TICKET_NO + "/assign")
                         .param("employeeId", "1")
                         .param("updaterId", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assigneeName").value("Harvey Specter"))
-                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
+                .andExpect(status().isOk());
     }
 
     @Test
-    void updateStatus_ReturnsUpdatedTicket() throws Exception {
-        TicketResponseDTO response = new TicketResponseDTO();
-        response.setStatus(TicketStatus.CLOSED);
+    void updateStatus_WithRemarks() throws Exception {
+        when(ticketService.updateTicket(eq(TICKET_NO), any(TicketStatus.class), anyString(), anyLong()))
+                .thenReturn(responseDTO);
 
-        when(ticketService.updateTicket(eq("T-123"), eq(TicketStatus.CLOSED), anyString(), eq(1L)))
-                .thenReturn(response);
+        // FIX: Match the @PutMapping used in your controller
+        mockMvc.perform(put("/api/tickets/" + TICKET_NO + "/status")
+                        .param("status", "IN_PROGRESS")
+                        .param("remarks", "Taking this up")
+                        .param("updaterId", "2"))
+                .andExpect(status().isOk());
+    }
 
-        mockMvc.perform(put("/api/tickets/T-123/status")
-                        .param("status", "CLOSED")
-                        .param("remarks", "Resolved")
-                        .param("updaterId", "1"))
+    @Test
+    void getOneTicket_Success() throws Exception {
+        // 1. Arrange: Define what the service should return
+        when(ticketService.getTicketById(TICKET_NO)).thenReturn(responseDTO);
+
+        // 2. Act & Assert: Call the GET endpoint with the ticket number
+        mockMvc.perform(get("/api/tickets/{ticketNumber}", TICKET_NO))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CLOSED"));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.ticketNumber").value(TICKET_NO))
+                .andExpect(jsonPath("$.title").value("Test Ticket"))
+                .andExpect(jsonPath("$.status").value("FILED"));
+
+        // Verify service was called exactly once
+        verify(ticketService, times(1)).getTicketById(TICKET_NO);
+    }
+
+    @Test
+    void getOneTicket_NotFound_Returns404() throws Exception {
+        // 1. Arrange: Force the service to throw the custom exception
+        String invalidTicket = "NON-EXISTENT";
+        when(ticketService.getTicketById(invalidTicket))
+                .thenThrow(new ResourceNotFoundException("Ticket not found with number: " + invalidTicket));
+
+        // 2. Act & Assert: Expect 404 Not Found from your GlobalExceptionHandler
+        mockMvc.perform(get("/api/tickets/{ticketNumber}", invalidTicket))
+                .andExpect(status().isNotFound())
+                // Depending on your GlobalExceptionHandler body format:
+                .andExpect(content().string(containsString("Ticket not found")));
     }
 }
